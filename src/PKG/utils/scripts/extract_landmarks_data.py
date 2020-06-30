@@ -1,27 +1,29 @@
 import io
 import os
 import cv2
+import time
 import zipfile
+import argparse
 import numpy as np 
 import pandas as pd
+import concurrent.futures
 from decouple import config
-import matplotlib.pyplot as plt
 
 
-DATA_PATH = config("FACE_DATA")
+DATA_PATH = config("FACE_DATA")+"face_landmarks1/"
 files = os.listdir(DATA_PATH)
+print("files in data directory: ", files)
 
-def draw_batch(batch, marks):
+def draw_batch(batch):
     rows = []
-    for yi in range(len(batch)//8):
+    BATCH_LENGTH = len(batch)
+    for yi in range(0, BATCH_LENGTH-1, 8):
         cols = []
-        for xi in range(len(batch)//8):
-            img = np.dstack([batch[xi]]*3).astype("uint8")
-            mark = marks.iloc[xi, :].astype("int64")
-            nCols = len(marks.columns)
-            for i in range(nCols-1):
-                pt = tuple(mark[i:i+2])
-                cv2.circle(img, pt, 2, (0, 255, 0), -1)
+        row = batch[yi:yi+8]
+        for data in row:
+            img = data["image"]
+            keypoints = data["keypoints"]
+            img = plot_keypoints(img, keypoints)
             cols.append(img)
         row = np.hstack(cols)
         rows.append(row)
@@ -31,15 +33,76 @@ def draw_batch(batch, marks):
     cv2.destroyWindow("batch")
 
 
-with zipfile.ZipFile(DATA_PATH+files[0], "r") as zf:
-    zf.printdir()
-    landmarks = pd.read_csv(zf.open("facial_keypoints.csv", "r"))
-    with io.BufferedReader(zf.open("face_images.npz", "r")) as npf:
-        data = np.load(npf)
-        print(data.files)
-        # print(data.f.face_images.shape)
-        data = data["face_images"]
-        data = np.moveaxis(data, -1, 0)
-    draw_batch(data[:64], landmarks[:64])
+def process_img(data_row, root_path=DATA_PATH+"training/", size=96):
+    # index, data = data_row
+    # image_name = data.iloc[0]
+    # img_path = root_path + image_name
+    img = cv2.imread(data_row)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # keypoints = data.iloc[1:].values.reshape(-1, 2)
 
-cv2.destroyAllWindows()
+    h, w = img.shape
+    max_dim = max(h, w)
+    if max_dim > size:
+        scale = size / max_dim 
+        new_h = int(h * scale)
+        new_w = int(w * scale)
+        img = cv2.resize(img, (new_w, new_h))
+        # keypoints = keypoints * scale
+    else:
+        new_h, new_w = h, w
+    print(new_w, new_h)
+    start_x = size//2 - new_w // 2
+    start_y = size//2 - new_h // 2
+    resized_img = np.zeros((size, size)).astype("uint8")
+    resized_img[start_y:new_h, :new_w] = img
+    return resized_img#{"name" : image_name, "image": resized_img, "keypoints" : keypoints}
+
+
+def plot_keypoints(img, keypoints):
+    if len(img.shape) == 2:
+        img = np.dstack([img]*3).astype("uint8")
+    for (x, y) in keypoints:
+        cv2.circle(img, (int(x), int(y)), 3, (0, 255, 0), -1)
+    return img
+
+
+if __name__ == "__main__":
+    EXTRACTION_PATH = "../data/landmarks_dataset.npz"
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-S", "--state", required=True, type=str,
+        help="extract/viusalize extract dataset from source or visualize saved data"
+    )
+    parser.add_argument(
+        "-s", "--save", required=False, action="store_true",
+        help="saveing extracted dataset from source to project root data dir"
+    )
+
+    extracted_data = None
+    args = parser.parse_args()
+    if args.state == "extract":
+        dataset = pd.read_csv(DATA_PATH+"training_frames_keypoints.csv")
+        print("---> columns length: ", len(dataset.columns))
+        image_name = dataset.iloc[5, 0]
+        img_path = DATA_PATH+"training/" + image_name
+        img = process_img(img_path)
+        cv2.imshow("src", img)
+        cv2.waitKey(0)
+        # t1 = time.perf_counter()
+        # with concurrent.futures.ThreadPoolExecutor() as executer:
+        #     result = executer.map(process_img, dataset.iterrows())
+        # t2 = time.perf_counter()
+        print(f"time elapsed: {t2 - t1: .2f}")
+        extracted_data = list(result)
+        if args.save:
+            np.savez_compressed(EXTRACTION_PATH, extracted_data)
+            print("saved extracted data in ", EXTRACTION_PATH)
+    elif args.state == "visualize":
+        if os.path.exists(EXTRACTION_PATH):
+            extracted_data = np.load(EXTRACTION_PATH, allow_pickle=True)
+            extracted_data = extracted_data["arr_0"]
+            batch = extracted_data[:64]
+            draw_batch(batch)
+
+   
