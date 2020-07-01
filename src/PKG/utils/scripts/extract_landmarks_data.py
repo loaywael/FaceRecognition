@@ -34,13 +34,14 @@ def draw_batch(batch):
 
 
 def process_img(data_row, root_path=DATA_PATH+"training/", size=96):
-    # index, data = data_row
-    # image_name = data.iloc[0]
-    # img_path = root_path + image_name
-    img = cv2.imread(data_row)
+    index, data = data_row
+    image_name = data.iloc[0]
+    img_path = root_path + image_name
+    img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # keypoints = data.iloc[1:].values.reshape(-1, 2)
+    keypoints = data.iloc[1:].values.reshape(-1, 2)
 
+    scale = 1
     h, w = img.shape
     max_dim = max(h, w)
     if max_dim > size:
@@ -48,15 +49,16 @@ def process_img(data_row, root_path=DATA_PATH+"training/", size=96):
         new_h = int(h * scale)
         new_w = int(w * scale)
         img = cv2.resize(img, (new_w, new_h))
-        # keypoints = keypoints * scale
+        keypoints = keypoints * scale
     else:
         new_h, new_w = h, w
-    print(new_w, new_h)
+    
     start_x = size//2 - new_w // 2
     start_y = size//2 - new_h // 2
+    keypoints += [start_x, start_y] 
     resized_img = np.zeros((size, size)).astype("uint8")
-    resized_img[start_y:new_h, :new_w] = img
-    return resized_img#{"name" : image_name, "image": resized_img, "keypoints" : keypoints}
+    resized_img[start_y:start_y+new_h, start_x:start_x+new_w] = img
+    return {"name" : image_name, "image": resized_img, "keypoints" : keypoints}
 
 
 def plot_keypoints(img, keypoints):
@@ -84,16 +86,13 @@ if __name__ == "__main__":
     if args.state == "extract":
         dataset = pd.read_csv(DATA_PATH+"training_frames_keypoints.csv")
         print("---> columns length: ", len(dataset.columns))
-        image_name = dataset.iloc[5, 0]
-        img_path = DATA_PATH+"training/" + image_name
-        img = process_img(img_path)
-        cv2.imshow("src", img)
-        cv2.waitKey(0)
-        # t1 = time.perf_counter()
-        # with concurrent.futures.ThreadPoolExecutor() as executer:
-        #     result = executer.map(process_img, dataset.iterrows())
-        # t2 = time.perf_counter()
+        
+        t1 = time.perf_counter()
+        with concurrent.futures.ThreadPoolExecutor() as executer:
+            result = executer.map(process_img, dataset.iterrows())
+        t2 = time.perf_counter()
         print(f"time elapsed: {t2 - t1: .2f}")
+
         extracted_data = list(result)
         if args.save:
             np.savez_compressed(EXTRACTION_PATH, extracted_data)
