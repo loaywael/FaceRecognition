@@ -101,6 +101,7 @@ if __name__ == "__main__":
         if os.path.exists(EXTRACTION_PATH):
             extracted_data = np.load(EXTRACTION_PATH, allow_pickle=True)
             extracted_data = extracted_data["arr_0"]
+            np.random.shuffle(extracted_data)
             batch = extracted_data[:64]
             draw_batch(batch)
 
