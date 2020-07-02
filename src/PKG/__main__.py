@@ -1,7 +1,7 @@
 import cv2
 import time
 import tensorflow as tf
-from PKG.models import MyFaceNet
+from PKG.models import ResnetV2
 from PKG.models import CascadeDetector
 
 
@@ -13,7 +13,7 @@ detector = CascadeDetector(1.3, 5)
 # recording = False
 if __name__ == "__main__":
     # X = tf.random.uniform((64, 96, 96, 1))
-    # net = MyFaceNet()
+    net = ResnetV2()
     # print(net(X).shape)
     while True:
         ret, frame = cap.read()

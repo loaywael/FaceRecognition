@@ -1,1 +1,1 @@
-from PKG.utils.tools.convBlock import ConvBlock
+from PKG.utils.tools.resnetBlock import ResnetBlock

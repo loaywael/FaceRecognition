@@ -2,26 +2,26 @@ import tensorflow as tf
 import numpy as np
 
 
-class ConvBlock(tf.keras.models.Model):
+class ResnetBlock(tf.keras.models.Model):
     def __init__(self, filters, k_size, strides, stage, block, block_type="identity", **kwargs):
         f1, f2, f3 = filters
         self.block_type = block_type
-        super(ConvBlock, self).__init__(**kwargs)
+        super(ResnetBlock, self).__init__(**kwargs)
         blockName = "STAGE_" + str(stage) + "_"+self.block_type.upper()+"_BLOCK_" + str(block)
         # ============= sub-stage 1 =============
-        self.conv1 = ConvBlock.convLayer(f1, k=1, s=strides, weightsDecay=1e-4, name=blockName+"_conv_a")
+        self.conv1 = ResnetBlock.convLayer(f1, k=1, s=strides, weightsDecay=1e-4, name=blockName+"_conv_a")
         self.bn1 = tf.keras.layers.BatchNormalization(name=blockName+"_bn_a")
         self.activation1 = tf.keras.layers.Activation("elu", name=blockName+"_activ_a")
         # ============= sub-stage 2 =============
-        self.conv2 = ConvBlock.convLayer(f2, k=k_size, s=1, p="same", weightsDecay=1e-4, name=blockName+"_conv_b")
+        self.conv2 = ResnetBlock.convLayer(f2, k=k_size, s=1, p="same", weightsDecay=1e-4, name=blockName+"_conv_b")
         self.bn2 = tf.keras.layers.BatchNormalization(name=blockName+"_bn_b")
         self.activation2 = tf.keras.layers.Activation("elu", name=blockName+"_activ_b")
         # ============= sub-stage 3 =============
-        self.conv3 = ConvBlock.convLayer(f3, k=1, s=1, weightsDecay=1e-4, name=blockName+"_conv_c")
+        self.conv3 = ResnetBlock.convLayer(f3, k=1, s=1, weightsDecay=1e-4, name=blockName+"_conv_c")
         self.bn3 = tf.keras.layers.BatchNormalization(name=blockName+"_bn_c")
         # ============= sub-stage 4 =============
         if self.block_type == "conv":
-            self.convShortcut = ConvBlock.convLayer(
+            self.convShortcut = ResnetBlock.convLayer(
                 f3, k=1, s=strides, weightsDecay=1e-4, 
                 name=blockName+"_shortcut_conv", bias=False
             )
@@ -70,7 +70,7 @@ class ConvBlock(tf.keras.models.Model):
 
 if __name__ == "__main__":
     X = tf.random.uniform((64, 96, 96, 1))
-    conv_block = ConvBlock([32, 32, 256], 3, 1, "a", "1", block_type="conv")
+    conv_block = ResnetBlock([32, 32, 256], 3, 1, "a", "1", block_type="conv")
     Y = conv_block(X)
     print(conv_block.summary(line_length=125))
     print(Y.shape)

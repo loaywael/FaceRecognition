@@ -23,7 +23,7 @@ class CascadeDetector:
                 cv2.rectangle(frame, (x, y), (x+w, y+h), (235, 135, 21), 2)
                 cv2.rectangle(frame, (x, y-20), (x+50, y), (235, 135, 21), -1)
                 cv2.putText(
-                    frame, "Human", (x+5, y-5), 
+                    frame, "Person", (x+5, y-5), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.40, 
                     (255, 255, 255), 1, cv2.LINE_AA
                 )

@@ -1,2 +1,2 @@
-from PKG.models.nn import MyFaceNet
+from PKG.models.nn import ResnetV2
 from PKG.models.detector import CascadeDetector
