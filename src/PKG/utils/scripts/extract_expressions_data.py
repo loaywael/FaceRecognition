@@ -30,6 +30,7 @@ def draw_batch(batch):
         row = np.hstack(cols)
         rows.append(row)
     batch = np.vstack(rows)
+    batch = cv2.resize(batch, None, fx=2, fy=2)
     cv2.imshow("batch", batch)
     cv2.waitKey(0)
     cv2.destroyWindow("batch")
