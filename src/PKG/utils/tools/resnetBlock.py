@@ -31,7 +31,7 @@ class ResnetBlock(tf.keras.models.Model):
     
 
     @staticmethod
-    def convLayer(f, k, s=1, p="valid", weightsDecay=None, bias=True, name=""):
+    def convLayer(f, k, s=1, p="same", weightsDecay=None, bias=True, name=""):
         regularizer = None
         if weightsDecay:
             regularizer = tf.keras.regularizers.l2(weightsDecay)
