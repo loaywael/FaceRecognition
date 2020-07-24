@@ -20,12 +20,12 @@ Face Detection and Recognition  | under development
     </table>
     </br></br>
         
-    <h2>Resized batch of 128x96x96x1<h2>
+    <h2>Resized batch of 128x96x96x1</h2>
     <td><img align="center" src="assets/pipeline/raw_face_batch.png"></td>
     </br></br>
-    <h2>Resized with relocated landmarks overlayed<h2>
-    </br></br>
+    <h2>Resized with relocated landmarks overlayed</h2>
     <td><img src="assets/pipeline/face_keypoints_batch.png"></td>
-    <h2>Resized batch of 64x48x48x1 of expressions dataset<h2>
+    </br></br>
+    <h2>Resized batch of 64x48x48x1 of expressions dataset</h2>
     <td><img src="assets/pipeline/face_expressions_batch.png" style="width: 200%;"></td>
     </br></br>
